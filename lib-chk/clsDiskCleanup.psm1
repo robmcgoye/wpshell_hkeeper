@@ -4,6 +4,11 @@ class DiskCleanup
 {
   [Logging]$event_logger
   [bool]$errors_logged
+  [hashtable]$log_type = @{
+    error = 1
+    warning = 2
+    info = 3
+  }
 
   DiskCleanup([Logging]$e)
   {
@@ -83,7 +88,7 @@ class DiskCleanup
       }
       catch 
       {
-        $this.event_logger.write_event(3, 104, "ERROR: $($_) ")
+        $this.event_logger.write_event($this.log_type["error"], 104, "ERROR: $($_) ")
         $this.errors_logged = $true
       }
     }

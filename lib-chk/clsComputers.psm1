@@ -9,6 +9,11 @@ class Computers
   [string]$token
   [string]$key
   [string]$api_base_url
+  [hashtable]$log_type = @{
+    error = 1
+    warning = 2
+    info = 3
+  }
 
   Computers ([string]$url) 
   {
@@ -38,10 +43,10 @@ class Computers
       $api_request = [RestfulRequest]::new($api_url.show_computer_by_key($this.key), ($api_url.get_auth_header($this.token)))
       $response = $api_request.get()
       if ($api_request.getstatus() -ne 200){
-        $event_logger.write_event(1, 104, "ERROR: the server returned this code $($api_request.getstatus()). The message was: $($response.message) `n the URL: $($api_url.show_computer_by_key($this.key))")
+        $event_logger.write_event($this.log_type["error"], 104, "ERROR: the server returned this code $($api_request.getstatus()). The message was: $($response.message) `n the URL: $($api_url.show_computer_by_key($this.key))")
         $response = $null
       } else {
-        $event_logger.write_event(3, 200, "LOADED computer from the server")
+        $event_logger.write_event($this.log_type["info"], 200, "LOADED computer from the server")
       }    }
     return $response  
   }
@@ -70,19 +75,19 @@ class Computers
       $api_request = [RestfulRequest]::new($api_url.update_computer($computer_id), ($api_url.get_auth_header($this.token)))
       $response = $api_request.patch($this.build_computer_record())
       if ($api_request.getstatus() -eq -1) {
-        $event_logger.write_event(1, 404, "ERROR ${response}.")
+        $event_logger.write_event($this.log_type["error"], 404, "ERROR ${response}.")
         $response = $null
       } elseif ($api_request.getstatus() -eq 422) {
-        $event_logger.write_event(2, 302, "Failed updating computer event. $($response.message)")
+        $event_logger.write_event($this.log_type["error"], 302, "Failed updating computer event. $($response.message)")
         $response = $null
       } elseif ($api_request.getstatus() -eq 200) {
-        $event_logger.write_event(3, 100, "Updated Computer -- $($api_request.getstatus()) response code.")
+        $event_logger.write_event($this.log_type["info"], 100, "Updated Computer -- $($api_request.getstatus()) response code.")
       } else {
-        $event_logger.write_event(1, 403, "ERROR server returned $($api_request.getstatus()) response code with the following message: $($response.message).")
+        $event_logger.write_event($this.log_type["error"], 403, "ERROR server returned $($api_request.getstatus()) response code with the following message: $($response.message).")
         $response = $null
       }
    } else {
-      $event_logger.write_event(1, 101, "ERROR: jobs class not properly initialized")
+      $event_logger.write_event($this.log_type["error"], 101, "ERROR: jobs class not properly initialized")
     }
     return $response
   }
@@ -100,37 +105,37 @@ class Computers
       do {
         $response = $api_request.post($this.build_computer_record())
         if ($api_request.getstatus() -eq -1) {
-          $event_logger.write_event(1, 404, "ERROR ${response}.")
+          $event_logger.write_event($this.log_type["error"], 404, "ERROR ${response}.")
           $failed = $true
           $response = $null
         } elseif ($api_request.getstatus() -eq 422) {
           if ($null -ne ($response.message | get-member | Where-Object {$_.name -eq "key"})) {
-            $event_logger.write_event(2, 400, "This key is already being used.")
+            $event_logger.write_event($this.log_type["error"], 400, "This key is already being used.")
             $this.key = $api_registry_keys.generate_key()
             if ($api_registry_keys.update_key($this.key)) {
               # log change
-              $event_logger.write_event(2, 301, "Updated the computer key.")
+              $event_logger.write_event($this.log_type["info"], 301, "Updated the computer key.")
             } else {
-              $event_logger.write_event(3, 401, "ERROR failed trying to update the computer key.")
+              $event_logger.write_event($this.log_type["error"], 401, "ERROR failed trying to update the computer key.")
               $failed = $true
               $response = $null
             }
           } else {
-            $event_logger.write_event(2, 302, "Failed validation of new computer. $($response.message)")
+            $event_logger.write_event($this.log_type["error"], 302, "Failed validation of new computer. $($response.message)")
             $failed = $true
             $response = $null
           }
         } elseif ($api_request.getstatus() -eq 201) {
           # Do nothing since this is a positive response code :)
-          $event_logger.write_event(3, 301, "ADDED computer to the server.")
+          $event_logger.write_event($this.log_type["info"], 301, "ADDED computer to the server.")
         } else {
-          $event_logger.write_event(3, 403, "ERROR server returned $($api_request.getstatus()) response code with the following message: $($response.message).")
+          $event_logger.write_event($this.log_type["error"], 403, "ERROR server returned $($api_request.getstatus()) response code with the following message: $($response.message).")
           $failed = $true
           $response = $null
         }
       } until (($api_request.getstatus() -eq 201) -or ($failed))
     } else {
-      $event_logger.write_event(3, 200, "ERROR unable to load key and token values from the registry.")
+      $event_logger.write_event($this.log_type["error"], 200, "ERROR unable to load key and token values from the registry.")
       $response = $null
     }
     return $response
