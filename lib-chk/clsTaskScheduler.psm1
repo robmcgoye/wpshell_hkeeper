@@ -72,7 +72,7 @@ class TaskScheduler
   set_daily_task([int]$interval, [string]$time)
   {
     if ($this.initialized()) {
-      $trigger = New-ScheduledTaskTrigger -Daily -At $time -RepetitionInterval $interval
+      $trigger = New-ScheduledTaskTrigger -Daily -At $time -DaysInterval $interval
       $taction = $this.get_task_action()
       $settings = New-ScheduledTaskSettingsSet
       if ($this.task_exists()) {

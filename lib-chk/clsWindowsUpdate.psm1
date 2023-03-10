@@ -1,5 +1,7 @@
 # http://woshub.com/pswindowsupdate-module/
 # Get-WUHistory -Last 10 | Where-Object { $_.result -ne "Succeeded" }
+# [Net.ServicePointManager]::SecurityProtocol
+# [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 class WindowsUpdates 
 {

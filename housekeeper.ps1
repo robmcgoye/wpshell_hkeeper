@@ -41,6 +41,7 @@ function set_constants()
   Set-Variable job_error -option Constant -value 2 -scope script
   Set-Variable job_warning -option Constant -value 1 -scope script
   Set-Variable job_info -option Constant -value 0 -scope script
+  Set-Variable hk_build -option Constant -value 1 -scope script
 }
 
 function is_administrator() 
@@ -52,7 +53,9 @@ function reboot_computer()
 {
   $task_scheduler = [TaskScheduler]::new("$($script:prefs.task_name)_start", $script:prefs.task_path, "$($script:script_path_name) -on_startup `$true")
   $task_scheduler.set_task_startup()
-  Restart-Computer -force
+  if ($script:prefs.reboot -eq 1) {
+    Restart-Computer -force
+  }
 }
 
 function clear_reboot()
@@ -215,7 +218,7 @@ if (-not(is_administrator)) {
           $interval = Read-Host -Prompt "Enter the days to wait before executing (1)"
           $scheduled_time = Read-Host -Prompt "Enter the time to execute script (12AM)"
           $task_scheduler = [TaskScheduler]::new($Prefs.task_name, $Prefs.task_path, $script:script_path_name)
-          $task_scheduler.set_daily_task($interval, $scheduled_time)    
+          $task_scheduler.set_daily_task($interval, $scheduled_time) 
         }
       }
     }
@@ -241,7 +244,7 @@ if (-not(is_administrator)) {
             switch($job.action) {
               # -------------------
               "install_updates" {
-                install_updates -job_id $job.id -update_task $task -logger $event_logger
+                install_updates -job_id $job.id -update_task $task -logger $event_logger -api $api_key
               }
               # -------------------
               "delete_temp_files" {
@@ -283,9 +286,11 @@ if (-not(is_administrator)) {
               # -------------------
             }
           } else {
-            reboot_computer
             break
           }
+        }
+        if ($api_key.needs_reboot()) {
+          reboot_computer
         }
       }
     } else {

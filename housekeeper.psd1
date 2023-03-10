@@ -5,4 +5,5 @@ ConvertFrom-StringData @'
 	task_name = housekeeper
 	task_path = \\ntr-tech\\
 	api_url = https://support.ntr-tech.com/api/v1/
+	reboot = 0
 '@
