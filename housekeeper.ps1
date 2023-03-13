@@ -5,7 +5,7 @@
     .DESCRIPTION
         Script that interfaces with api to execute jobs set on admin console
 
-    .PARAMETER install
+    .PARAMETER setup
         set to true to setup api to execute
 
     .NOTES
@@ -29,7 +29,7 @@ Using module ".\lib-chk\clsTaskScheduler.psm1"
 Using module ".\lib-chk\clsWindowsUpdate.psm1"
 
 Param (
- [boolean]$install = $false,
+ [boolean]$setup = $false,
  [boolean]$on_startup = $false
  )
 
@@ -189,9 +189,9 @@ if (-not(is_administrator)) {
   # ------------------------------------------------------
   # make sure that api is configured or set to setup api
   # ------------------------------------------------------
-  if ((-not($api_key.is_api_setup())) -and ($install -eq $false)) {
+  if ((-not($api_key.is_api_setup())) -and ($setup -eq $false)) {
     # need to execute this from the console to setup api
-    $event_logger.write_event($script:log_error, 101, "ERROR: The API is not configured yet. Please execute from the console and use the install switch to setup API")
+    $event_logger.write_event($script:log_error, 101, "ERROR: The API is not configured yet. Please execute from the console and use the setup switch to setup API")
   } else {
     # check to see if startup flag is set
     if ($on_startup) {
@@ -199,7 +199,7 @@ if (-not(is_administrator)) {
       clear_reboot
     }
     # ------------------------------------------------------
-    if ($install) {
+    if ($setup) {
       if (-not($api_key.is_api_setup())) {
         $user = whoami
         $password = Read-Host "Enter password for user: ${user} " -AsSecureString
