@@ -35,9 +35,9 @@ class WindowsUpdates
   [bool]module_installed()
   {
     if ($null -eq (Get-Package -Name PSWindowsUpdate -ErrorAction SilentlyContinue)) {
-      return $true
-    } else {
       return $false
+    } else {
+      return $true
     }
   }
 

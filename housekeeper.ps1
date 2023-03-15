@@ -204,14 +204,20 @@ if (-not(is_administrator)) {
         $user = whoami
         $password = Read-Host "Enter password for user: ${user} " -AsSecureString
         $clientkey = Read-Host "Enter the client API key " | ConvertTo-SecureString -AsPlainText -Force
-        $comp_rec = $computer.new_computer($user, $clientkey, $password, $event_logger)
-        if ($null -eq $comp_rec) {
-          $api_key.remove_api_keys()
-          $event_logger.write_event($script:log_error, 101, "ERROR: unable to create record so api not created.")
-          write-output "Couldn't create record on server. Check the event logs."
-        }  
+        $computerkey = Read-Host "Enter the computer key (blank for new computer) " | ConvertTo-SecureString -AsPlainText -Force -ErrorAction SilentlyContinue
+        if ([string]::IsNullOrEmpty($computerkey))
+        {
+          $comp_rec = $computer.new_computer($user, $clientkey, $password, $event_logger)
+          if ($null -eq $comp_rec) {
+            $api_key.remove_api_keys()
+            $event_logger.write_event($script:log_error, 101, "ERROR: unable to create record so api not created.")
+            write-output "Couldn't create record on server. Check the event logs."
+          }    
+        } else {
+          $api_key.rebuild_api_keys($user, $password, $clientkey, $computerkey)
+        }       
       } else {
-        write-output "Already installed!"
+        write-output "Already configured!"
       }
       if ($api_key.is_api_setup()) {
         if ((Read-Host -Prompt "Do you want to schedule this to run daily? (y/n)") -eq "y") { 

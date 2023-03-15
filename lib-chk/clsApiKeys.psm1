@@ -102,26 +102,59 @@ class ApiKeys
     return $value
   }
 
-  setup_api_keys([string]$user, [securestring]$password, [securestring]$api_key)
+  hidden build_reg_key()
   {
     if ($null -eq (get-Item -Path ($this.get_hk_path()) -ErrorAction SilentlyContinue)) {
       new-Item -Path $this.hk_root_path -name $this.hk_root_key
     }
-    if (-not($this.is_api_key($this.hk_user_key))) {
-      New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_user_key -Value $user -PropertyType "String"
-    } else {
-      Set-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_user_key -Value $user
-    }
-    if (-not($this.is_api_key($this.hk_password_key))) {
-      New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_password_key -Value ($password | ConvertFrom-SecureString) -PropertyType "String"
-    } else {
-      Set-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_password_key -Value ($password | ConvertFrom-SecureString)
-    }
+  }
+
+  hidden build_reg_api_key([securestring]$api_key)
+  {
     if (-not($this.is_api_key($this.hk_api_key))) {
       New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_api_key -Value ($api_key | ConvertFrom-SecureString) -PropertyType "String"
     } else {
       Set-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_api_key -Value ($api_key | ConvertFrom-SecureString)
     }
+  }
+
+  hidden build_reg_password_key([securestring]$password)
+  {
+    if (-not($this.is_api_key($this.hk_password_key))) {
+      New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_password_key -Value ($password | ConvertFrom-SecureString) -PropertyType "String"
+    } else {
+      Set-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_password_key -Value ($password | ConvertFrom-SecureString)
+    }
+  }
+
+  hidden build_reg_user_key([string]$user)
+  {
+    if (-not($this.is_api_key($this.hk_user_key))) {
+      New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_user_key -Value $user -PropertyType "String"
+    } else {
+      Set-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_user_key -Value $user
+    }
+  }
+
+  rebuild_api_keys([string]$user, [securestring]$password, [securestring]$api_key, [securestring]$computer_key)
+  {
+    $this.build_reg_key()
+    $this.build_reg_user_key($user)
+    $this.build_reg_password_key($password)
+    $this.build_reg_api_key($api_key)
+    if (-not($this.is_api_key($this.hk_key_key))) {
+      New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_key_key -Value ($computer_key | ConvertFrom-SecureString) -PropertyType "String"
+    } else {
+      Set-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_key_key -Value ($computer_key | ConvertFrom-SecureString)
+    }
+  }
+
+  setup_api_keys([string]$user, [securestring]$password, [securestring]$api_key)
+  {
+    $this.build_reg_key()
+    $this.build_reg_user_key($user)
+    $this.build_reg_password_key($password)
+    $this.build_reg_api_key($api_key)
     if (-not($this.is_api_key($this.hk_key_key))) {
       New-ItemProperty -Path ($this.get_hk_path()) -Name $this.hk_key_key -Value (($this.generate_key()) | ConvertFrom-SecureString) -PropertyType "String"
     }
