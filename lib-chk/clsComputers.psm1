@@ -63,6 +63,7 @@ class Computers
       "serial_number" = $hardware.serial_number;
       "mb_serial_number" = $hardware.mb_serial_number;
       "key" = $this.key;
+      "bios_released_on" = $this.bios_released_on;
     }
     return @{ "computer" = $record }
 }
